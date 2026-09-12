@@ -1,0 +1,24 @@
+{
+  "name": "polski-trainer-db",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Schema docs and migration/backup scripts for the polski-trainer MongoDB Atlas database.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "migrate-up": "tsx scripts/migrate-up.ts",
+    "export-backup": "tsx scripts/export-backup.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "mongodb": "^6.12.0"
+  },
+  "devDependencies": {
+     "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
