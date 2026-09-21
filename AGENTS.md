@@ -1,5 +1,14 @@
 # AGENTS.md
 
+## Env files — never read, never write
+
+AI assistants must **never** read or write `.env` files in this repo — not to
+check a value, fix a typo, debug a connection, or verify anything. By default,
+assume `.env` doesn't exist to you: everything you need to know about
+environment configuration lives in `.env.example` only. If an env-related
+change is needed, edit `.env.example` and tell Duchess to apply it to her own
+`.env` herself.
+
 ## Git — manual only, never AI
 
 AI assistants (Claude or any other coding agent) working in this repo must

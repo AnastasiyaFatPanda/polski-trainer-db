@@ -1,28 +1,25 @@
 # `progress` collection
 
-One document, `_id: "main"`, `data` holds the whole progress map exactly as
-`data/progress.json` did — keyed by entry id:
+One document per (user, word) progress record.
 
 ```ts
 {
-  _id: "main",
-  data: {
-    [entryId: string]: {
-      correct: number,
-      wrong: number,
-      streak: number,
-      lastSeen: number,   // epoch ms
-    }
-  },
-  updatedAt: Date,
+  _id: `${userId}_${entryId}`,
+  userId: ObjectId,
+  entryId: string,
+  correct: number,
+  wrong: number,
+  streak: number,
+  lastSeen: number,   // epoch ms
 }
 ```
 
-Merge-by-newer-`lastSeen` (never field-by-field, never summed) happens
-client-side in `src/lib/progressStore.ts` / `src/lib/progress.ts`, exactly as
-before — the API just stores whatever whole map it's given, same as the old
-file writer did.
+Same "one small document, not one big map" reasoning as `words`. The frontend
+still fetches/saves the whole map in one request
+(`GET/PUT /api/progress`) — the API assembles it from these rows on GET and
+upserts one row per changed word on PUT. Merge-by-newer-`lastSeen` still
+happens client-side (`src/lib/progressStore.ts` in the frontend), exactly as
+before; the API just stores whatever it's given, same as the old file writer.
 
-## `progress_history` collection
-
-Up to 5 previous copies, `{ data, savedAt }`, mirrors `progress.backup.json`.
+Progress rows are never deleted by the API — an orphaned record (from a
+deleted word) is harmless and left in place, same as the old file-based app.

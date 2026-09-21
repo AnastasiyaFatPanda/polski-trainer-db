@@ -4,11 +4,11 @@ import path from 'node:path';
 import { MongoClient } from 'mongodb';
 
 /**
- * Dumps the two singleton documents (vocabulary, progress) back to timestamped
- * JSON files. Worth running regularly by hand (or as a cron / GitHub Action) —
- * MongoDB Atlas's free M0 tier has no automated backups, so this is the only
- * safety net besides the API's own vocabulary_history / progress_history
- * collections (which only keep the last 5 generations).
+ * Dumps every collection to timestamped JSON files. Worth running regularly
+ * by hand (or as a cron / GitHub Action) — MongoDB Atlas's free M0 tier has
+ * no automated backups, so this is the only safety net. Includes users'
+ * bcrypt hashes (never plaintext passphrases) so a restore doesn't also
+ * require re-provisioning everyone.
  */
 
 function required(name: string): string {
@@ -26,18 +26,15 @@ async function main() {
   await client.connect();
   try {
     const db = client.db();
-    const vocabulary = await db.collection('vocabulary').findOne({ _id: 'main' as never });
-    const progress = await db.collection('progress').findOne({ _id: 'main' as never });
-
     const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const vocabOut = path.join(backupDir, `vocabulary.${stamp}.json`);
-    const progressOut = path.join(backupDir, `progress.${stamp}.json`);
 
-    await writeFile(vocabOut, `${JSON.stringify(vocabulary, null, 2)}\n`, 'utf8');
-    await writeFile(progressOut, `${JSON.stringify(progress, null, 2)}\n`, 'utf8');
-
-    console.log(`Wrote ${vocabOut}`);
-    console.log(`Wrote ${progressOut}`);
+    const collections = ['users', 'words', 'sets', 'progress'];
+    for (const name of collections) {
+      const docs = await db.collection(name).find({}).toArray();
+      const out = path.join(backupDir, `${name}.${stamp}.json`);
+      await writeFile(out, `${JSON.stringify(docs, null, 2)}\n`, 'utf8');
+      console.log(`Wrote ${out} (${docs.length} docs)`);
+    }
   } finally {
     await client.close();
   }
